@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireAuth(request);
   if (!auth) {
@@ -15,8 +15,9 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params;
     const updates = await request.json();
-    const event = db.events.getAll().find(e => e.id === params.id);
+    const event = db.events.getAll().find(e => e.id === id);
 
     if (!event) {
       return NextResponse.json(
@@ -33,7 +34,7 @@ export async function PUT(
       );
     }
 
-    const updatedEvent = db.events.update(params.id, updates);
+    const updatedEvent = db.events.update(id, updates);
     return NextResponse.json({ success: true, event: updatedEvent });
   } catch (error) {
     return NextResponse.json(
@@ -45,7 +46,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireAuth(request);
   if (!auth) {
@@ -55,7 +56,8 @@ export async function DELETE(
     );
   }
 
-  const event = db.events.getAll().find(e => e.id === params.id);
+  const { id } = await params;
+  const event = db.events.getAll().find(e => e.id === id);
   if (!event) {
     return NextResponse.json(
       { success: false, message: 'Événement non trouvé' },
@@ -71,7 +73,7 @@ export async function DELETE(
     );
   }
 
-  db.events.delete(params.id);
+  db.events.delete(id);
   return NextResponse.json({ success: true });
 }
 

@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireAuth(request);
   if (!auth) {
@@ -15,8 +15,9 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params;
     const updates = await request.json();
-    const task = db.tasks.findById(params.id);
+    const task = db.tasks.findById(id);
 
     if (!task) {
       return NextResponse.json(
@@ -33,7 +34,7 @@ export async function PUT(
       );
     }
 
-    const updatedTask = db.tasks.update(params.id, updates);
+    const updatedTask = db.tasks.update(id, updates);
     return NextResponse.json({ success: true, task: updatedTask });
   } catch (error) {
     return NextResponse.json(
@@ -45,7 +46,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireAuth(request);
   if (!auth) {
@@ -55,7 +56,8 @@ export async function DELETE(
     );
   }
 
-  const task = db.tasks.findById(params.id);
+  const { id } = await params;
+  const task = db.tasks.findById(id);
   if (!task) {
     return NextResponse.json(
       { success: false, message: 'Tâche non trouvée' },
@@ -71,7 +73,7 @@ export async function DELETE(
     );
   }
 
-  db.tasks.delete(params.id);
+  db.tasks.delete(id);
   return NextResponse.json({ success: true });
 }
 

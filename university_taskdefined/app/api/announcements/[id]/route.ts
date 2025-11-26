@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireRole(request, ['admin']);
   if (!auth) {
@@ -15,8 +15,9 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params;
     const { title, content, priority } = await request.json();
-    const announcement = db.announcements.getAll().find(a => a.id === params.id);
+    const announcement = db.announcements.getAll().find(a => a.id === id);
 
     if (!announcement) {
       return NextResponse.json(
@@ -25,7 +26,7 @@ export async function PUT(
       );
     }
 
-    const updatedAnnouncement = db.announcements.update(params.id, {
+    const updatedAnnouncement = db.announcements.update(id, {
       title,
       content,
       priority,
@@ -49,7 +50,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireRole(request, ['admin']);
   if (!auth) {
@@ -59,7 +60,8 @@ export async function DELETE(
     );
   }
 
-  const success = db.announcements.delete(params.id);
+  const { id } = await params;
+  const success = db.announcements.delete(id);
   if (!success) {
     return NextResponse.json(
       { success: false, message: 'Annonce non trouvée' },
