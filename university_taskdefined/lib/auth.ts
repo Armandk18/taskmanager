@@ -35,7 +35,7 @@ export async function authenticateUser(email: string, password: string): Promise
 
   // Pour la démo, on accepte les mots de passe simples
   // En production, utiliser verifyPassword
-  const isValid = password === 'admin123' || password === 'student123' || 
+  const isValid = password === 'admin123' || password === 'student123' || password === 'enseignant123' || 
                   await verifyPassword(password, user.password);
   
   return isValid ? user : null;
