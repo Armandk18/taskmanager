@@ -27,7 +27,11 @@ export async function PUT(
     }
 
     // Vérifier les permissions
-    if (auth.role !== 'admin' && task.studentId !== auth.id) {
+    const isOwner = task.studentId === auth.id || task.createdById === auth.id;
+    const isSharedWith = task.sharedWith?.includes(auth.id);
+    const canEdit = auth.role === 'admin' || isOwner || (auth.role === 'enseignant' && task.createdById === auth.id);
+    
+    if (!canEdit && !isSharedWith) {
       return NextResponse.json(
         { success: false, message: 'Permission refusée' },
         { status: 403 }
@@ -66,7 +70,10 @@ export async function DELETE(
   }
 
   // Vérifier les permissions
-  if (auth.role !== 'admin' && task.studentId !== auth.id) {
+  const isOwner = task.studentId === auth.id || task.createdById === auth.id;
+  const canDelete = auth.role === 'admin' || (auth.role === 'enseignant' && task.createdById === auth.id) || isOwner;
+  
+  if (!canDelete) {
     return NextResponse.json(
       { success: false, message: 'Permission refusée' },
       { status: 403 }

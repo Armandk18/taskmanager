@@ -18,7 +18,13 @@ export default function LoginPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          router.push(data.user.role === 'admin' ? '/admin' : '/dashboard');
+          if (data.user.role === 'admin') {
+            router.push('/admin');
+          } else if (data.user.role === 'enseignant') {
+            router.push('/enseignant');
+          } else {
+            router.push('/dashboard');
+          }
         }
       });
   }, [router]);
@@ -38,7 +44,13 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        router.push(data.user.role === 'admin' ? '/admin' : '/dashboard');
+        if (data.user.role === 'admin') {
+          router.push('/admin');
+        } else if (data.user.role === 'enseignant') {
+          router.push('/enseignant');
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       } else {
         setError(data.message || 'Erreur de connexion');
@@ -96,6 +108,9 @@ export default function LoginPage() {
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400">
             Étudiant: student@university.edu / student123
+          </p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            Enseignant: enseignant@university.edu / enseignant123
           </p>
         </div>
       </div>

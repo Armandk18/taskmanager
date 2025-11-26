@@ -13,7 +13,13 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          router.push(data.user.role === 'admin' ? '/admin' : '/dashboard');
+          if (data.user.role === 'admin') {
+            router.push('/admin');
+          } else if (data.user.role === 'enseignant') {
+            router.push('/enseignant');
+          } else {
+            router.push('/dashboard');
+          }
         } else {
           router.push('/login');
         }

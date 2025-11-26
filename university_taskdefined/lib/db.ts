@@ -18,6 +18,14 @@ let users: User[] = [
     role: 'student',
     createdAt: new Date().toISOString(),
   },
+  {
+    id: '3',
+    email: 'enseignant@university.edu',
+    password: '$2a$10$rOzJqZqZqZqZqZqZqZqZqO', // "enseignant123" hashé
+    name: 'Enseignant Test',
+    role: 'enseignant',
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 let tasks: Task[] = [];
@@ -42,6 +50,8 @@ export const db = {
   tasks: {
     findById: (id: string) => tasks.find(t => t.id === id),
     findByStudentId: (studentId: string) => tasks.filter(t => t.studentId === studentId),
+    findBySharedWith: (userId: string) => tasks.filter(t => t.sharedWith?.includes(userId)),
+    findByCreatedBy: (userId: string) => tasks.filter(t => t.createdById === userId),
     getAll: () => tasks,
     create: (task: Omit<Task, 'id' | 'createdAt'>) => {
       const newTask: Task = {

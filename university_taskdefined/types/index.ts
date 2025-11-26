@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'admin';
+export type UserRole = 'student' | 'admin' | 'enseignant';
 
 export interface User {
   id: string;
@@ -16,9 +16,11 @@ export interface Task {
   dueDate: string;
   completed: boolean;
   studentId: string;
-  createdBy: 'student' | 'admin';
+  createdBy: 'student' | 'admin' | 'enseignant';
   createdAt: string;
   priority: 'low' | 'medium' | 'high';
+  sharedWith?: string[]; // IDs des étudiants avec qui la tâche est partagée
+  createdById?: string; // ID de l'utilisateur qui a créé la tâche
 }
 
 export interface Announcement {

@@ -3,10 +3,10 @@ import { requireRole } from '@/lib/middleware';
 import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
-  const auth = requireRole(request, ['admin']);
+  const auth = requireRole(request, ['admin', 'enseignant']);
   if (!auth) {
     return NextResponse.json(
-      { success: false, message: 'Accès refusé - Admin uniquement' },
+      { success: false, message: 'Accès refusé - Admin ou Enseignant uniquement' },
       { status: 403 }
     );
   }
