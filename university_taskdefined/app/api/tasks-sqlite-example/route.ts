@@ -3,8 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/middleware';
-import { tasksService, userTasksService, classesService } from '@/lib/sqlite-service';
-import { usersService } from '@/lib/sqlite-service';
+import { tasksService, userTasksService, classesService, usersService } from '@/lib/sqlite-service';
 
 /**
  * GET /api/tasks-sqlite-example

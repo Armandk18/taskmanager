@@ -3,13 +3,13 @@
 
 import { db } from './sqlite';
 import {
-  FirestoreUser,
-  FirestoreClass,
-  FirestoreTask,
-  FirestoreUserTask,
+  SQLiteUser,
+  SQLiteClass,
+  SQLiteTask,
+  SQLiteUserTask,
   TaskStatus,
   UserRole,
-} from '@/types/firestore';
+} from '@/types/sqlite';
 
 // Helper pour générer des IDs
 function generateId(): string {
@@ -24,7 +24,7 @@ export const usersService = {
   /**
    * Récupérer un utilisateur par ID
    */
-  findById(userId: string): FirestoreUser | null {
+  findById(userId: string): SQLiteUser | null {
     try {
       const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
       const row = stmt.get(userId) as any;
@@ -46,7 +46,7 @@ export const usersService = {
   /**
    * Récupérer un utilisateur par email
    */
-  findByEmail(email: string): FirestoreUser | null {
+  findByEmail(email: string): SQLiteUser | null {
     try {
       const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
       const row = stmt.get(email) as any;
@@ -68,7 +68,7 @@ export const usersService = {
   /**
    * Récupérer tous les utilisateurs d'un rôle spécifique
    */
-  findByRole(role: UserRole): FirestoreUser[] {
+  findByRole(role: UserRole): SQLiteUser[] {
     try {
       const stmt = db.prepare('SELECT * FROM users WHERE role = ?');
       const rows = stmt.all(role) as any[];
@@ -89,7 +89,7 @@ export const usersService = {
   /**
    * Récupérer tous les utilisateurs
    */
-  getAll(): FirestoreUser[] {
+  getAll(): SQLiteUser[] {
     try {
       const stmt = db.prepare('SELECT * FROM users ORDER BY createdAt DESC');
       const rows = stmt.all() as any[];
@@ -110,18 +110,21 @@ export const usersService = {
   /**
    * Créer un nouvel utilisateur
    */
-  create(user: Omit<FirestoreUser, 'id' | 'createdAt'>): FirestoreUser {
+  create(user: Omit<SQLiteUser, 'id' | 'createdAt'> & { password: string }): SQLiteUser {
     const id = generateId();
     const stmt = db.prepare(`
       INSERT INTO users (id, email, password, name, role, createdAt)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `);
     
-    stmt.run(id, user.email, user.password || '', user.name, user.role);
+    stmt.run(id, user.email, user.password, user.name, user.role);
     
     return {
       id,
-      ...user,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      classIds: user.classIds,
       createdAt: new Date(),
     };
   },
@@ -129,7 +132,7 @@ export const usersService = {
   /**
    * Mettre à jour un utilisateur
    */
-  update(userId: string, updates: Partial<FirestoreUser>): boolean {
+  update(userId: string, updates: Partial<SQLiteUser> & { password?: string }): boolean {
     try {
       const fields: string[] = [];
       const values: any[] = [];
@@ -203,7 +206,7 @@ export const classesService = {
   /**
    * Récupérer une classe par ID
    */
-  findById(classId: string): FirestoreClass | null {
+  findById(classId: string): SQLiteClass | null {
     try {
       const stmt = db.prepare('SELECT * FROM classes WHERE id = ?');
       const row = stmt.get(classId) as any;
@@ -226,7 +229,7 @@ export const classesService = {
   /**
    * Récupérer toutes les classes d'un enseignant
    */
-  findByTeacher(teacherId: string): FirestoreClass[] {
+  findByTeacher(teacherId: string): SQLiteClass[] {
     try {
       const stmt = db.prepare('SELECT * FROM classes WHERE teacherId = ? ORDER BY createdAt DESC');
       const rows = stmt.all(teacherId) as any[];
@@ -246,7 +249,7 @@ export const classesService = {
   /**
    * Récupérer toutes les classes d'un étudiant
    */
-  findByStudent(studentId: string): FirestoreClass[] {
+  findByStudent(studentId: string): SQLiteClass[] {
     try {
       const stmt = db.prepare(`
         SELECT c.* FROM classes c
@@ -271,7 +274,7 @@ export const classesService = {
   /**
    * Créer une nouvelle classe
    */
-  create(classData: Omit<FirestoreClass, 'id' | 'createdAt'>): FirestoreClass {
+  create(classData: Omit<SQLiteClass, 'id' | 'createdAt'>): SQLiteClass {
     const id = generateId();
     const stmt = db.prepare(`
       INSERT INTO classes (id, name, teacherId, createdAt)
@@ -303,7 +306,7 @@ export const classesService = {
   /**
    * Mettre à jour une classe
    */
-  update(classId: string, updates: Partial<FirestoreClass>): boolean {
+  update(classId: string, updates: Partial<SQLiteClass>): boolean {
     try {
       const fields: string[] = [];
       const values: any[] = [];
@@ -386,7 +389,7 @@ export const tasksService = {
   /**
    * Récupérer une tâche par ID
    */
-  findById(taskId: string): FirestoreTask | null {
+  findById(taskId: string): SQLiteTask | null {
     try {
       const stmt = db.prepare('SELECT * FROM tasks WHERE id = ?');
       const row = stmt.get(taskId) as any;
@@ -410,7 +413,7 @@ export const tasksService = {
   /**
    * Récupérer toutes les tâches d'une classe
    */
-  findByClass(classId: string): FirestoreTask[] {
+  findByClass(classId: string): SQLiteTask[] {
     try {
       const stmt = db.prepare(`
         SELECT * FROM tasks 
@@ -437,7 +440,7 @@ export const tasksService = {
   /**
    * Récupérer toutes les tâches créées par un utilisateur
    */
-  findByAssigner(assignerId: string): FirestoreTask[] {
+  findByAssigner(assignerId: string): SQLiteTask[] {
     try {
       const stmt = db.prepare(`
         SELECT * FROM tasks 
@@ -464,7 +467,7 @@ export const tasksService = {
   /**
    * Récupérer toutes les tâches
    */
-  getAll(): FirestoreTask[] {
+  getAll(): SQLiteTask[] {
     try {
       const stmt = db.prepare('SELECT * FROM tasks ORDER BY createdAt DESC');
       const rows = stmt.all() as any[];
@@ -487,7 +490,7 @@ export const tasksService = {
   /**
    * Créer une nouvelle tâche
    */
-  create(taskData: Omit<FirestoreTask, 'id' | 'createdAt'>): FirestoreTask {
+  create(taskData: Omit<SQLiteTask, 'id' | 'createdAt'>): SQLiteTask {
     const id = generateId();
     const stmt = db.prepare(`
       INSERT INTO tasks (id, title, description, dueDate, assignerId, classId, priority, createdAt)
@@ -514,7 +517,7 @@ export const tasksService = {
   /**
    * Mettre à jour une tâche
    */
-  update(taskId: string, updates: Partial<FirestoreTask>): boolean {
+  update(taskId: string, updates: Partial<SQLiteTask>): boolean {
     try {
       const fields: string[] = [];
       const values: any[] = [];
@@ -576,7 +579,7 @@ export const userTasksService = {
   /**
    * Récupérer un userTask par ID
    */
-  findById(userTaskId: string): FirestoreUserTask | null {
+  findById(userTaskId: string): SQLiteUserTask | null {
     try {
       const stmt = db.prepare('SELECT * FROM user_tasks WHERE id = ?');
       const row = stmt.get(userTaskId) as any;
@@ -601,7 +604,7 @@ export const userTasksService = {
   /**
    * Récupérer tous les userTasks d'un étudiant
    */
-  findByUser(userId: string): FirestoreUserTask[] {
+  findByUser(userId: string): SQLiteUserTask[] {
     try {
       const stmt = db.prepare(`
         SELECT * FROM user_tasks 
@@ -629,7 +632,7 @@ export const userTasksService = {
   /**
    * Récupérer tous les userTasks d'une tâche
    */
-  findByTask(taskId: string): FirestoreUserTask[] {
+  findByTask(taskId: string): SQLiteUserTask[] {
     try {
       const stmt = db.prepare('SELECT * FROM user_tasks WHERE taskId = ?');
       const rows = stmt.all(taskId) as any[];
@@ -653,7 +656,7 @@ export const userTasksService = {
   /**
    * Récupérer un userTask spécifique (tâche + étudiant)
    */
-  findByTaskAndUser(taskId: string, userId: string): FirestoreUserTask | null {
+  findByTaskAndUser(taskId: string, userId: string): SQLiteUserTask | null {
     try {
       const stmt = db.prepare('SELECT * FROM user_tasks WHERE taskId = ? AND userId = ?');
       const row = stmt.get(taskId, userId) as any;
@@ -678,7 +681,7 @@ export const userTasksService = {
   /**
    * Créer un userTask
    */
-  create(userTaskData: Omit<FirestoreUserTask, 'id' | 'createdAt' | 'updatedAt'>): FirestoreUserTask {
+  create(userTaskData: Omit<SQLiteUserTask, 'id' | 'createdAt' | 'updatedAt'>): SQLiteUserTask {
     const id = generateId();
     const stmt = db.prepare(`
       INSERT INTO user_tasks (id, taskId, userId, status, submissionLink, grade, teacherComment, createdAt, updatedAt)
@@ -706,7 +709,7 @@ export const userTasksService = {
   /**
    * Mettre à jour un userTask
    */
-  update(userTaskId: string, updates: Partial<FirestoreUserTask>): boolean {
+  update(userTaskId: string, updates: Partial<SQLiteUserTask>): boolean {
     try {
       const fields: string[] = [];
       const values: any[] = [];
